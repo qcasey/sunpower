@@ -43,14 +43,14 @@ def http_post(url, data):
     return response.read()
 
 def parseAndPostData(msg):
-	global lastProduction, lastConsumption
+	global lastProduction, lastConsumption, lastActualProduction
 
 	if (msg[0] == "130"):
 		currentProduction = float(msg[4])
 
 		if lastProduction:
 			actualProduction = currentProduction - lastProduction
-			print('\tActual Production (kWh): %.2f\n' % actualProduction)
+			print('\tActual Production (kW): %.2f\n' % actualProduction)
 			response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.power_production", json={"state": round(actualProduction, 3), "attributes": { "friendly_name": "Power Production", "unit_of_measurement": "kW", "icon": "hass:solar-power" }}, headers=head)
 			print('\tResponse: %s\n' % response.json())
 			lastActualProduction = actualProduction
@@ -66,7 +66,7 @@ def parseAndPostData(msg):
 
 		if lastActualProduction and lastConsumption:
 			actualConsumption = currentConsumption - lastConsumption + lastActualProduction
-			print('\tActual Consumption (kWh): %.2f\n' % actualConsumption)
+			print('\tActual Consumption (kW): %.2f\n' % actualConsumption)
 			response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.power_consumption", json={"state": round(actualConsumption, 3), "attributes": { "friendly_name": "Power Consumption", "unit_of_measurement": "kW", "icon": "hass:power-plug" }}, headers=head)
 			print('\tResponse: %s\n' % response.json())
 
