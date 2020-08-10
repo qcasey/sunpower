@@ -1,0 +1,12 @@
+[Unit]
+Description=Sunpower Collector
+After=network.target network-online.target rsyslog.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python -u /home/casey/sunpower/capture/pycap.py
+WorkingDirectory=/home/casey/sunpower/capture/
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
