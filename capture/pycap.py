@@ -47,27 +47,32 @@ def parseAndPostData(msg):
 
 	if (msg[0] == "130"):
 		currentProduction = float(msg[4])
+		if currentProduction < 0:
+			return
 
 		if lastProduction:
 			actualProduction = currentProduction - lastProduction
-			print('\tActual Production (kW): %.2f\n' % actualProduction)
-			response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.power_production", json={"state": round(actualProduction, 3), "attributes": { "friendly_name": "Power Production", "unit_of_measurement": "kW", "icon": "hass:solar-power" }}, headers=head)
+			if actualProduction < 0:
+				lastProduction = currentProduction
+				return
+				
+			print('\tActual Production (kWh): %.2f\n' % actualProduction)
+			response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.power_production", json={"state": round(actualProduction, 3), "attributes": { "friendly_name": "Power Production", "device_class": "energy", "unit_of_measurement": "kW", "icon": "hass:solar-power" }}, headers=head)
 			print('\tResponse: %s\n' % response.json())
 			lastActualProduction = actualProduction
 
 		lastProduction = currentProduction
 
 		# Post temperature
-		response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.inverter_temperature", json={"state": float(msg[10]), "attributes": { "friendly_name": "Inverter Temperature", "unit_of_measurement": "°C", "icon": "hass:thermometer" }}, headers=head)
-		print('\tTemperature Response: %s\n' % response.json())
+		response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.inverter_temperature", json={"state": float(msg[10]), "attributes": { "friendly_name": "Inverter Temperature", "device_class": "temperature", "unit_of_measurement": "°C", "icon": "hass:thermometer" }}, headers=head)
 
 	elif (msg[0] == "131"):
 		currentConsumption = float(msg[5])
 
 		if lastActualProduction and lastConsumption:
 			actualConsumption = currentConsumption - lastConsumption + lastActualProduction
-			print('\tActual Consumption (kW): %.2f\n' % actualConsumption)
-			response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.power_consumption", json={"state": round(actualConsumption, 3), "attributes": { "friendly_name": "Power Consumption", "unit_of_measurement": "kW", "icon": "hass:power-plug" }}, headers=head)
+			print('\tActual Consumption (kWh): %.2f\n' % actualConsumption)
+			response = requests.post(HOME_ASSISTANT_URL + "/api/states/sensor.power_consumption", json={"state": round(actualConsumption, 3), "attributes": { "friendly_name": "Power Consumption", "device_class": "energy", "unit_of_measurement": "kW", "icon": "hass:power-plug" }}, headers=head)
 			print('\tResponse: %s\n' % response.json())
 
 		lastConsumption = currentConsumption
